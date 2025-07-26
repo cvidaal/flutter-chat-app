@@ -1,5 +1,8 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/providers/auth_service.dart';
 import 'package:chat/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -14,13 +17,15 @@ class LoginPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Logo(titulo: 'Messenger',),
+                  Logo(
+                    titulo: 'Messenger',
+                  ),
                   _Form(),
                   Labels(
                     ruta: 'register',
                     subLabel: '¿No tienes cuenta?',
                     label: 'Crea una ahora!',
-                    ),
+                  ),
                   Text(
                     'Términos y condiciones de uso',
                     style: TextStyle(fontWeight: FontWeight.w200),
@@ -44,6 +49,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -62,12 +69,27 @@ class __FormState extends State<_Form> {
             isPassword: true,
           ),
           boton(
-            text: 'Ingrese',
-            onPressed: () {
-              print(emailController.text);
-              print(passwordController.text);
-            },
-          ),
+              text: 'Ingrese',
+              onPressed: authService.autenticando
+                  ? null
+                  : () async {
+                      FocusScope.of(context).unfocus(); // Cierra el teclado
+
+                      final loginOk = await authService.login(
+                          emailController.text.trim(),
+                          passwordController.text.trim());
+
+                      if (loginOk) {
+                        // TODO: Conectar al socket server
+                        
+                        // Navegar a otra pantalla
+                        Navigator.pushReplacementNamed(context, 'users');
+                      } else {
+                        // Mostrar alerta
+                        mostrarAlerta(context, 'Login Incorrecto',
+                            'Revise sus credenciales');
+                      }
+                    }),
         ],
       ),
     );

@@ -1,5 +1,8 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/providers/auth_service.dart';
 import 'package:chat/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatelessWidget {
   @override
@@ -14,12 +17,15 @@ class RegisterPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Logo(titulo: 'Registro',),
+                  Logo(
+                    titulo: 'Registro',
+                  ),
                   _Form(),
                   Labels(
                     ruta: 'login',
                     subLabel: '¿Ya tienes cuenta?',
-                    label: 'Ingresa ahora!',),
+                    label: 'Ingresa ahora!',
+                  ),
                   Text(
                     'Términos y condiciones de uso',
                     style: TextStyle(fontWeight: FontWeight.w200),
@@ -44,6 +50,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -68,11 +76,26 @@ class __FormState extends State<_Form> {
             isPassword: true,
           ),
           boton(
-            text: 'Registrar',
-            onPressed: () {
-              print(emailController.text);
-              print(passwordController.text);
-            },
+            text: 'Crear cuenta',
+            onPressed: authService.autenticando
+                ? null
+                : () async {
+                    print(nameController.text);
+                    print(emailController.text);
+                    print(passwordController.text);
+
+                    final registroOk = await authService.register(
+                        nameController.text.trim(),
+                        emailController.text.trim(),
+                        passwordController.text.trim());
+
+                    if (registroOk == true) {
+                      //TODO; Conectar socket server
+                      Navigator.pushReplacementNamed(context, 'users');
+                    } else{
+                      await mostrarAlerta(context, 'Registro fallido', registroOk.toString());
+                    }
+                  },
           ),
         ],
       ),
